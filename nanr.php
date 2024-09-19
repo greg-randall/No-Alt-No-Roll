@@ -44,7 +44,7 @@ function nanr_pretty_list($list) {
     return $formattedList;
 }
 
-function check_image_alt_text( $post_id ) {
+function nanr_check_image_alt_text( $post_id ) {
     // Prevent function from running on autosave
     if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) {
         return;
@@ -74,6 +74,11 @@ function check_image_alt_text( $post_id ) {
     
     // Query for all <img> tags in the content
     $images = $xpath->query('//img');
+
+    // Skip the check if there are no images in the content
+    if ( $images->length === 0 ) {
+        return;
+    }
     
     // Initialize variables to track images with and without alt text
     $images_without_alt = [];
@@ -93,9 +98,9 @@ function check_image_alt_text( $post_id ) {
     
     // If any image is missing alt text, block the save operation and show an error
     if ( !empty($images_without_alt) ) {
-        wp_die('All images must have alt text before saving. Missing alt text in ' . $images_missing_alt . ' of ' . ($images_with_alt + $images_missing_alt) . ' images: ' . nanr_pretty_list( $images_without_alt) );
+        wp_die('All images require ALT text before saving, missing alt text in ' . $images_missing_alt . '/' . ($images_with_alt + $images_missing_alt) . ' images: ' . nanr_pretty_list( $images_without_alt) );
     }
 }
 
 // Attach the function to the save_post action hook
-add_action('save_post', 'check_image_alt_text');
+add_action('save_post', 'nanr_check_image_alt_text');
