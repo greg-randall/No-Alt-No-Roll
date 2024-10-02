@@ -88,8 +88,19 @@ function nanr_check_image_alt_text( $post_id ) {
     // Loop through each image to check for alt attribute
     foreach ( $images as $image ) {
         if ( !$image->hasAttribute('alt') || empty($image->getAttribute('alt')) ) {
+            $image_name = basename($image->getAttribute('src'));
+            if ( empty($image_name) ) {
+                // If the image has no source, clone the image node and convert it to HTML
+                $dom = new DOMDocument();
+                $clonedImage = $dom->importNode($image, true);
+                $dom->appendChild($clonedImage);
+                $image = $dom->saveHTML($clonedImage);
+
+                // Replace angle brackets with carets to prevent WordPress from rejecting the HTML
+                $image_name = "Image has no source or something else went wrong -- " . str_replace(['<', '>'], '^', $image);
+            }
             // Add images without alt text to the array
-            $images_without_alt[] = basename($image->getAttribute('src'));
+            $images_without_alt[] = $image_name;
             $images_missing_alt++;
         } else {
             $images_with_alt++;
